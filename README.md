@@ -2,6 +2,9 @@
 
 这是一个 Vite + FastAPI 的 AI 塔罗网站。本版本在 Chrome 稳定版基础上整合了网页塔罗猫与独立 Windows 桌宠、站内对话、账号和个人占卜档案。
 
+- 在线演示：<https://arcana-flow-black.vercel.app/>
+- 源码仓库：<https://github.com/siyuy481-collab/ArcanaFlow>
+
 ## 已包含功能
 
 - 稳定的响应式首页与 88px 桌面导航，不再使用巨型滚动场景或 Canvas 星空。
