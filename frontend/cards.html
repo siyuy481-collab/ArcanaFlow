@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07121b" />
+    <title>牌义图鉴｜ARCANA</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2307121b'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23e3c27a' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23e3c27a'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./pet.css" />
+  </head>
+  <body class="cards-page">
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="./index.html"><span class="brand-sigil" aria-hidden="true"></span><span>ARCANA</span></a>
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a href="./index.html" data-i18n="nav.home">首页</a><a href="./index.html#draw" data-i18n="nav.draw">抽牌</a><a class="is-active" href="./cards.html" data-i18n="nav.cards">牌义图鉴</a><a href="./account.html#history" data-i18n="nav.archive">占卜档案</a>
+        </nav>
+        <div class="header-tools">
+          <div class="language-switch" aria-label="Language"><button type="button" data-locale="zh">中</button><button type="button" data-locale="en">EN</button><button type="button" data-locale="ja">日</button></div>
+          <a class="account-link" data-account-link href="./account.html">登录 / 注册</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="cards-main">
+      <section class="library-intro">
+        <div>
+          <p class="eyebrow" data-i18n="cards.eyebrow">THE MAJOR ARCANA</p>
+          <h1 data-i18n-html="cards.title">二十二种<br /><em>心灵原型</em></h1>
+        </div>
+        <p data-i18n="cards.intro">大阿卡那不是二十二个固定结论，而是二十二面镜子。选择任意牌面，查看它在正位与逆位时可能指向的经验。</p>
+      </section>
+
+      <section class="library-browser" aria-label="Major Arcana library">
+        <div class="library-toolbar">
+          <label class="library-search"><span aria-hidden="true">⌕</span><input id="cardSearch" type="search" autocomplete="off" data-i18n-placeholder="cards.search" placeholder="搜索牌名或关键词" /></label>
+          <p id="libraryCount"></p>
+        </div>
+        <div class="library-grid" id="libraryGrid"></div>
+        <p class="library-empty" id="libraryEmpty" data-i18n="cards.empty" hidden>没有找到相符的牌。</p>
+      </section>
+    </main>
+
+    <dialog class="card-dialog" id="cardDialog" aria-labelledby="dialogCardName">
+      <button class="dialog-close" id="dialogClose" type="button" aria-label="Close">×</button>
+      <div class="dialog-layout">
+        <div class="dialog-card-art" id="dialogCardArt"></div>
+        <article class="dialog-copy">
+          <p class="dialog-number" id="dialogCardNumber"></p>
+          <h2 id="dialogCardName"></h2>
+          <p class="dialog-english" id="dialogCardEnglish"></p>
+          <div class="meaning-pair">
+            <section><span>☉</span><div><h3 data-i18n="cards.upright">正位</h3><p id="dialogUpright"></p></div></section>
+            <section><span>☾</span><div><h3 data-i18n="cards.reversed">逆位</h3><p id="dialogReversed"></p></div></section>
+          </div>
+        </article>
+      </div>
+    </dialog>
+
+    <footer class="site-footer"><span>ARCANA © 2026</span><p data-i18n="cards.footer">牌义是象征的入口，不是唯一的答案。</p></footer>
+    <script type="module" src="./cards.js"></script>
+  </body>
+</html>

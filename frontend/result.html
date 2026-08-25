@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" /><meta name="theme-color" content="#04131c" />
+    <title>你的占卜结果｜ARCANA</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2307121b'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23e3c27a' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23e3c27a'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./pet.css" />
+  </head>
+  <body class="result-page">
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header"><div class="header-inner">
+      <a class="brand" href="./index.html"><span class="brand-sigil" aria-hidden="true"></span><span>ARCANA</span></a>
+      <nav class="primary-nav" aria-label="Primary navigation"><a href="./index.html" data-i18n="nav.home">首页</a><a href="./index.html#draw" data-i18n="nav.drawAgain">再次抽牌</a><a href="./cards.html" data-i18n="nav.cards">牌义图鉴</a><a href="./account.html#history" data-i18n="nav.archive">占卜档案</a></nav>
+      <div class="header-tools"><div class="language-switch" aria-label="Language"><button type="button" data-locale="zh">中</button><button type="button" data-locale="en">EN</button><button type="button" data-locale="ja">日</button></div><a class="account-link" data-account-link href="./account.html">登录 / 注册</a></div>
+    </div></header>
+
+    <main class="result-main">
+      <section class="result-intro"><p class="eyebrow">YOUR READING</p><p class="result-date" id="resultDate"></p><h1 data-i18n-html="result.title">你所选择的<br /><em>正在显现</em></h1><blockquote id="resultQuestion" data-i18n="result.loadingQuestion">正在读取你的问题…</blockquote></section>
+      <section class="water-stage" id="waterStage" aria-label="Card reveal">
+        <div class="reveal-aura" aria-hidden="true"></div><div class="reveal-rule" aria-hidden="true"></div><div class="revealed-cards" id="revealedCards"></div><p class="water-caption" id="waterCaption" data-i18n="result.water">让视线停留片刻，牌面会像一句话般缓缓浮现</p>
+      </section>
+      <section class="interpretation" id="interpretation" aria-labelledby="interpretationTitle">
+        <div class="interpretation-heading"><p class="eyebrow">THE INTERPRETATION</p><h2 id="interpretationTitle" data-i18n="result.interpretation">你的解读</h2><div class="result-actions"><button class="button button-primary" id="saveReading" type="button" disabled data-i18n="result.save">保存到占卜档案</button><a class="button button-secondary" href="./index.html#draw" data-i18n="result.redraw">重新抽牌</a></div><p class="save-status" id="saveStatus" aria-live="polite"></p></div>
+        <div class="interpretation-body"><div class="reading-loader" id="readingLoader"><span></span><p data-i18n="result.loading">AI 正在连接牌面线索…</p></div><article class="reading-copy" id="readingCopy" hidden></article><div class="card-notes" id="cardNotes"></div></div>
+      </section>
+    </main>
+    <footer class="site-footer"><span>ARCANA © 2026</span><p data-i18n="result.footer">请把牌面视作整理内心的镜子，而非确定未来的结论。</p></footer>
+    <script type="module" src="./result.js"></script>
+  </body>
+</html>

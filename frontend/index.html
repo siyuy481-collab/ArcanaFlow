@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07121b" />
+    <title>ARCANA｜AI 塔罗占卜</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2307121b'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23e3c27a' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23e3c27a'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./pet.css" />
+  </head>
+  <body>
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="./index.html" aria-label="ARCANA">
+          <span class="brand-sigil" aria-hidden="true"></span><span>ARCANA</span>
+        </a>
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a class="is-active" href="./index.html" data-i18n="nav.home">首页</a>
+          <a href="#draw" data-i18n="nav.draw">抽牌</a>
+          <a href="./cards.html" data-i18n="nav.cards">牌义图鉴</a>
+          <a href="./account.html#history" data-i18n="nav.archive">占卜档案</a>
+        </nav>
+        <div class="header-tools">
+          <div class="language-switch" aria-label="Language">
+            <button type="button" data-locale="zh" aria-label="中文">中</button>
+            <button type="button" data-locale="en" aria-label="English">EN</button>
+            <button type="button" data-locale="ja" aria-label="日本語">日</button>
+          </div>
+          <a class="account-link" data-account-link href="./account.html">登录 / 注册</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero-section editorial-hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="home.eyebrow">ARCANA · 象征与直觉之间</p>
+          <h1 id="hero-title" data-i18n-html="home.title">凝视未知<br /><em>听见自己</em></h1>
+          <p class="hero-intro" data-i18n="home.intro">问题沉入夜色，象征从心底回应。无需寻找标准答案，只需留意最先吸引你的那张牌。</p>
+          <div class="hero-actions quiet-actions">
+            <a class="ritual-link" href="#draw"><span data-i18n="home.begin">写下一个问题</span><i>↘</i></a>
+            <a class="ritual-link muted" href="./cards.html"><span data-i18n="home.explore">翻阅牌义图鉴</span><i>→</i></a>
+          </div>
+          <p class="hero-marginalia">“As above, so below.”</p>
+        </div>
+
+        <div class="hero-visual" id="heroVisual" aria-label="Interactive tarot card">
+          <div class="orbit orbit-one" data-parallax="orbit-far"></div>
+          <div class="orbit orbit-two" data-parallax="orbit-near"></div>
+          <div class="hero-card-halo" data-parallax="halo"></div>
+          <div class="hero-card-stage">
+            <div class="hero-card" id="heroCard">
+              <span class="hero-eye-layer" aria-hidden="true">
+                <img src="./assets/arcana-eye-layer.png" alt="" />
+              </span>
+              <span class="hero-card-layer" aria-hidden="true"></span>
+              <span class="card-specular" aria-hidden="true"></span>
+            </div>
+          </div>
+          <p data-i18n="home.whisper">YOUR INTUITION KNOWS</p>
+          <span class="interaction-hint" aria-hidden="true">MOVE TO OBSERVE</span>
+        </div>
+      </section>
+
+      <section class="draw-section editorial-draw" id="draw" aria-labelledby="draw-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow" data-i18n="draw.eyebrow">一次安静的抽牌</p>
+            <h2 id="draw-title" data-i18n="draw.title">让直觉先于解释</h2>
+          </div>
+          <p data-i18n="draw.intro">写下此刻真正困扰你的问题，然后放慢速度，选择第一张令你停留的牌。牌面会在另一页揭晓。</p>
+        </div>
+
+        <div class="draw-layout manuscript-layout">
+          <aside class="question-panel">
+            <span class="ornament" aria-hidden="true">☾</span>
+            <label for="questionInput" data-i18n="draw.questionLabel">你想询问什么？</label>
+            <textarea id="questionInput" maxlength="240" rows="5" data-i18n-placeholder="draw.questionPlaceholder" placeholder="例如：未来三个月，我该如何调整自己的职业方向？"></textarea>
+            <div class="field-meta">
+              <span data-i18n="draw.questionHint">清楚地描述处境，不必预设答案</span>
+              <span><b id="questionCount">0</b>/240</span>
+            </div>
+
+            <div class="mode-picker quiet-mode" role="group" aria-label="Spread">
+              <button class="is-active" type="button" data-mode="single">
+                <strong data-i18n="draw.modeSingle">单牌指引</strong><small data-i18n="draw.modeSingleHint">一张牌 · 凝视当下</small>
+              </button>
+              <button type="button" data-mode="three">
+                <strong data-i18n="draw.modeThree">三牌展开</strong><small data-i18n="draw.modeThreeHint">过去 · 当下 · 未来</small>
+              </button>
+            </div>
+
+            <div class="draw-submit-wrap">
+              <button class="button button-primary button-wide" id="openReading" type="button" disabled data-i18n="draw.open">揭开牌面 →</button>
+              <p class="form-status" id="drawStatus" aria-live="polite"></p>
+            </div>
+          </aside>
+
+          <div class="deck-panel">
+            <div class="deck-heading">
+              <div><span class="ornament small" aria-hidden="true">✦</span><h3 data-i18n="draw.instinct">跟随第一直觉</h3></div>
+              <p><span id="selectedCount">0</span> / <span id="requiredCount">1</span> <span data-i18n="draw.selected">已选择</span></p>
+            </div>
+            <div class="gesture-control" id="gestureControl">
+              <button class="gesture-trigger" id="gestureStart" type="button">
+                <span class="gesture-mark" aria-hidden="true">⌁</span>
+                <span><strong data-i18n="gesture.title">以手势选牌</strong><small data-i18n="gesture.intro">食指移动焦点，张开手掌确认</small></span>
+                <i data-i18n="gesture.start">开启摄像头</i>
+              </button>
+              <div class="gesture-session" id="gestureSession" hidden>
+                <div class="gesture-preview"><video id="gestureVideo" playsinline muted></video><span>LIVE</span></div>
+                <div class="gesture-feedback">
+                  <strong id="gestureStatus" data-i18n="gesture.loading">正在准备手势识别…</strong>
+                  <small data-i18n="gesture.privacy">影像仅在当前浏览器中用于识别，不会上传</small>
+                  <div class="gesture-progress" aria-hidden="true"><i id="gestureProgress"></i></div>
+                </div>
+                <button class="gesture-stop" id="gestureStop" type="button" data-i18n="gesture.stop">结束</button>
+              </div>
+            </div>
+            <span class="gesture-cursor" id="gestureCursor" aria-hidden="true"></span>
+            <div class="fan-stage" id="fanStage">
+              <div class="fan-constellation" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="selection-gate" id="selectionGate" aria-hidden="true">
+                <span class="gate-corners"></span>
+                <strong id="gateNumber">06</strong>
+                <small data-i18n="draw.gateHint">让一张牌停在光框中</small>
+              </div>
+              <button class="fan-nav fan-prev" id="fanPrev" type="button" aria-label="Previous card">‹</button>
+              <div class="card-grid fan-deck" id="cardGrid" aria-label="Tarot cards"></div>
+              <button class="fan-nav fan-next" id="fanNext" type="button" aria-label="Next card">›</button>
+            </div>
+            <p class="fan-instruction" data-i18n="draw.fanInstruction">点击牌面，或左右移动食指，让目标牌滑入中央发光虚框</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><span>ARCANA © 2026</span><p data-i18n="footer.notice">占卜用于自我觉察与娱乐，不替代医疗、法律或财务建议。</p></footer>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

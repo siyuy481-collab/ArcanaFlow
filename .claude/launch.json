@@ -1,0 +1,10 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "arcana-frontend",
+      "url": "http://127.0.0.1:5174",
+      "port": 5174
+    }
+  ]
+}

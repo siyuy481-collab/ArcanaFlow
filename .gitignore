@@ -1,0 +1,12 @@
+.vercel/
+agent/.env
+agent/.venv/
+agent/arcana.db
+agent/arcana.db-shm
+agent/arcana.db-wal
+frontend/node_modules/
+frontend/dist/
+**/__pycache__/
+**/.pytest_cache/
+*.pyc
+.runlogs/

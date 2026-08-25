@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" /><meta name="theme-color" content="#07121b" />
+    <title>个人中心｜ARCANA</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2307121b'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23e3c27a' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23e3c27a'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./pet.css" />
+  </head>
+  <body class="account-page">
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header"><div class="header-inner">
+      <a class="brand" href="./index.html"><span class="brand-sigil" aria-hidden="true"></span><span>ARCANA</span></a>
+      <nav class="primary-nav" aria-label="Primary navigation"><a href="./index.html" data-i18n="nav.home">首页</a><a href="./index.html#draw" data-i18n="nav.draw">抽牌</a><a href="./cards.html" data-i18n="nav.cards">牌义图鉴</a><a class="is-active" href="#history" data-i18n="nav.archive">占卜档案</a></nav>
+      <div class="header-tools"><div class="language-switch" aria-label="Language"><button type="button" data-locale="zh">中</button><button type="button" data-locale="en">EN</button><button type="button" data-locale="ja">日</button></div><a class="account-link is-active" data-account-link href="./account.html">登录 / 注册</a></div>
+    </div></header>
+
+    <main class="account-main">
+      <section class="auth-view" id="authView">
+        <div class="auth-intro"><p class="eyebrow" data-i18n="auth.eyebrow">一间只属于你的档案室</p><h1 data-i18n-html="auth.title">收藏每一次<br /><em>与内心的对话</em></h1><p data-i18n="auth.intro">登录不是为了追踪你，而是让散落的提问和牌面在时间里留下安静的坐标。</p><ul><li data-i18n="auth.safe1">密码经过加盐哈希后保存</li><li data-i18n="auth.safe2">每位用户只能读取自己的记录</li><li data-i18n="auth.safe3">本地 SQLite 存储，适合个人使用</li></ul></div>
+        <div class="auth-card manuscript-auth">
+          <div class="auth-tabs" role="tablist"><button class="is-active" type="button" role="tab" data-auth-tab="login" data-i18n="auth.login">登录</button><button type="button" role="tab" data-auth-tab="register" data-i18n="auth.register">注册</button></div>
+          <form id="loginForm" class="auth-form"><label><span data-i18n="auth.identifier">用户名或邮箱</span><input name="identifier" autocomplete="username" required data-i18n-placeholder="auth.identifierPlaceholder" placeholder="输入用户名或邮箱" /></label><label><span data-i18n="auth.password">密码</span><input name="password" type="password" autocomplete="current-password" minlength="8" required data-i18n-placeholder="auth.passwordPlaceholder" placeholder="至少 8 位" /></label><button class="button button-primary button-wide" type="submit" data-i18n="auth.loginSubmit">进入我的档案</button></form>
+          <form id="registerForm" class="auth-form" hidden><label><span data-i18n="auth.username">用户名</span><input name="username" autocomplete="username" minlength="3" maxlength="24" required data-i18n-placeholder="auth.usernamePlaceholder" placeholder="3–24 位中文、字母或数字" /></label><label><span data-i18n="auth.email">邮箱</span><input name="email" type="email" autocomplete="email" required placeholder="name@example.com" /></label><label><span data-i18n="auth.password">密码</span><input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required data-i18n-placeholder="auth.passwordPlaceholder" placeholder="至少 8 位" /></label><button class="button button-primary button-wide" type="submit" data-i18n="auth.registerSubmit">创建 ARCANA 账号</button></form>
+          <p class="auth-message" id="authMessage" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="profile-view" id="profileView" hidden>
+        <div class="profile-head"><div><p class="eyebrow" data-i18n="profile.welcome">欢迎回来</p><h1><span id="profileName">旅人</span><span data-i18n-html="profile.suffix">的<br /><em>占卜档案</em></span></h1><p id="profileEmail"></p></div><div class="profile-actions"><a class="button button-primary" href="./index.html#draw" data-i18n="profile.new">开始新的占卜</a><button class="button button-secondary" id="logoutButton" type="button" data-i18n="profile.logout">退出登录</button></div></div>
+        <div class="history-section" id="history"><div class="history-heading"><div><p class="eyebrow">READING HISTORY</p><h2 data-i18n="profile.history">历史记录</h2></div><strong id="historyCount"></strong></div><div class="history-list" id="historyList"><div class="history-loading" data-i18n="history.loading">正在读取记录…</div></div></div>
+      </section>
+    </main>
+    <footer class="site-footer"><span>ARCANA © 2026</span><p data-i18n="account.footer">你的问题与解读仅保存在当前项目的本地数据库中。</p></footer>
+    <script type="module" src="./account.js"></script>
+  </body>
+</html>
