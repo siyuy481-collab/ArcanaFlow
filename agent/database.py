@@ -17,7 +17,8 @@ AGENT_DIR = Path(__file__).resolve().parent
 
 
 def _database_path() -> Path:
-    configured = os.getenv("ARCANA_DB_PATH", "arcana.db")
+    default_path = "/tmp/arcana.db" if os.getenv("VERCEL") else "arcana.db"
+    configured = os.getenv("ARCANA_DB_PATH", default_path)
     path = Path(configured)
     return path if path.is_absolute() else AGENT_DIR / path
 
