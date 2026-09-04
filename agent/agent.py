@@ -3,7 +3,7 @@ import re
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
-from config import DEEPSEEK_API_KEY
+from config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL
 from minds_client import MindsAgentError, minds_is_configured, run_mind_single_turn
 from prompts import PET_CHAT_PROMPT, PET_DRAW_PROMPT, TAROT_PROMPT
 from tarot_draw import draw_cards
@@ -19,7 +19,7 @@ pet_draw_chain = None
 
 if DEEPSEEK_API_KEY:
     model = ChatOpenAI(
-        model="deepseek-chat",
+        model=DEEPSEEK_MODEL,
         api_key=DEEPSEEK_API_KEY,
         base_url="https://api.deepseek.com",
         timeout=25,

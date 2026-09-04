@@ -70,4 +70,4 @@ if (-not (Test-Path -LiteralPath $envFile)) {
 Write-Host ""
 Write-Host "Setup complete. Double-click start.bat to run the site and desktop pet." -ForegroundColor Green
 Write-Host "To launch only the desktop pet, double-click desktop-pet.bat."
-Write-Host "For the desktop-pet Mind, edit agent\.env and set MINDS_API_KEY plus MINDS_SPARK_ID."
+Write-Host "For the desktop-pet Mind, edit agent\.env and set MINDS_BUILDER_API_KEY plus MINDS_SPARK_ID."

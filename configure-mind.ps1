@@ -33,16 +33,17 @@ function Set-DotEnvValue {
 
 Write-Host "ARCANA Minds setup" -ForegroundColor Cyan
 Write-Host "The key is stored only in agent\.env and will not be printed."
-$secureKey = Read-Host "Paste MINDS_API_KEY" -AsSecureString
+$secureKey = Read-Host "Paste MINDS_BUILDER_API_KEY" -AsSecureString
 $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
 try {
     $apiKey = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
 } finally {
     [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
 }
-if ($apiKey -notmatch '^minds_[A-Za-z0-9_-]+$') {
-    throw "The API key format is invalid. Minds keys normally begin with minds_."
+if ([string]::IsNullOrWhiteSpace($apiKey)) {
+    throw "The Minds Builder API key cannot be empty."
 }
+$apiKey = $apiKey.Trim()
 
 $sparkId = ""
 $sparkId = "0582483e-f36b-1410-8466-00039ce7df11"
@@ -54,7 +55,7 @@ if ([string]::IsNullOrWhiteSpace($sparkId)) {
     throw "The Mind Spark ID cannot be empty."
 }
 
-Set-DotEnvValue -Name "MINDS_API_KEY" -Value $apiKey
+Set-DotEnvValue -Name "MINDS_BUILDER_API_KEY" -Value $apiKey
 Set-DotEnvValue -Name "MINDS_SPARK_ID" -Value $sparkId
 Set-DotEnvValue -Name "MINDS_API_BASE" -Value "https://api.build.hellominds.ai"
 

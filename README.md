@@ -72,14 +72,17 @@
 编辑 `agent/.env`：
 
 ```dotenv
-MINDS_API_KEY=你的_minds_API_Key
+MINDS_BUILDER_API_KEY=你的_Builder_API_Key
 MINDS_SPARK_ID=0582483e-f36b-1410-8466-00039ce7df11
 MINDS_API_BASE=https://api.build.hellominds.ai
 DEEPSEEK_API_KEY=你的_API_Key
+DEEPSEEK_MODEL=deepseek-v4-flash
 ARCANA_DB_PATH=arcana.db
 ```
 
-`MINDS_SPARK_ID` 已固定为你在 Hellominds 创建的 TARO Mind。每次提问都会创建一个独立 conversation，不发送之前的聊天记录。`DEEPSEEK_API_KEY` 只作为其他网站解读的可选在线模型。没有填写 `MINDS_API_KEY` 时仍可正常抽牌、使用桌宠、注册、登录和保存记录；桌宠会自动使用内置三语回复。请勿分享包含真实 Key 的 `.env`。
+`MINDS_BUILDER_API_KEY` 是当前 Minds Builder 使用的变量名；项目也继续兼容旧变量名 `MINDS_API_KEY`，并接受旧式 `minds_...` 与当前 JWT 形式的有效 Key。`MINDS_SPARK_ID` 已固定为你在 Hellominds 创建的 TARO Mind。每次提问都会创建一个独立 conversation，不发送之前的聊天记录。主占卜使用 `DEEPSEEK_MODEL`，默认是当前可用的 `deepseek-v4-flash`；旧模型名 `deepseek-chat` 已停止服务。没有填写在线模型 Key 时仍可正常抽牌、使用桌宠、注册、登录和保存记录；桌宠会自动使用内置三语回复。修改 `.env` 后需要重启后端。请勿分享包含真实 Key 的 `.env`。
+
+TARO Mind 的本地编排使用 LangChain LCEL：`PromptTemplate → MindsBuilderTransport → PydanticOutputParser`。Minds Builder REST API 仍是底层模型服务，因此保留参赛所需的 Mind，同时由 LangChain 负责提示词渲染、调用链追踪和结构化输出校验。
 
 ## 数据位置
 
