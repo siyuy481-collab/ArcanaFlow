@@ -1,33 +1,67 @@
 import re
 
+from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import Runnable
 from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field, field_validator
 
-from config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL
-from minds_client import MindsAgentError, minds_is_configured, run_mind_single_turn
-from prompts import PET_CHAT_PROMPT, PET_DRAW_PROMPT, TAROT_PROMPT
+from config import OPENAI_API_KEY, OPENAI_MODEL
+from prompts import PET_CHAT_PROMPT, PET_DRAW_PROMPT, PET_MIND_PROMPT, TAROT_PROMPT
 from tarot_draw import draw_cards
+
+
+class PetMindResult(BaseModel):
+    reply: str = Field(min_length=1, description="A short empathetic reply to the user")
+    keywords: list[str] = Field(
+        min_length=1,
+        max_length=5,
+        description="Two to five meaningful keywords from the user's question",
+    )
+    reading: str = Field(min_length=1, description="A reflective interpretation of the drawn card")
+
+    @field_validator("reply", "reading", mode="before")
+    @classmethod
+    def strip_text(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator("keywords", mode="before")
+    @classmethod
+    def normalize_keywords(cls, value):
+        if not isinstance(value, list):
+            return value
+        cleaned = [str(item).strip() for item in value if str(item).strip()]
+        return list(dict.fromkeys(cleaned))[:5]
 
 
 prompt = ChatPromptTemplate.from_template(TAROT_PROMPT)
 pet_prompt = ChatPromptTemplate.from_template(PET_CHAT_PROMPT)
 pet_draw_prompt = ChatPromptTemplate.from_template(PET_DRAW_PROMPT)
+pet_mind_parser = PydanticOutputParser(pydantic_object=PetMindResult)
+pet_mind_prompt = ChatPromptTemplate.from_template(PET_MIND_PROMPT).partial(
+    format_instructions=pet_mind_parser.get_format_instructions(),
+)
 model = None
 tarot_chain = None
 pet_chain = None
 pet_draw_chain = None
+pet_mind_chain: Runnable | None = None
 
-if DEEPSEEK_API_KEY:
+if OPENAI_API_KEY:
     model = ChatOpenAI(
-        model=DEEPSEEK_MODEL,
-        api_key=DEEPSEEK_API_KEY,
-        base_url="https://api.deepseek.com",
+        model=OPENAI_MODEL,
+        api_key=OPENAI_API_KEY,
         timeout=25,
         max_retries=1,
     )
     tarot_chain = prompt | model
     pet_chain = pet_prompt | model
     pet_draw_chain = pet_draw_prompt | model
+    pet_mind_chain = pet_mind_prompt | model | pet_mind_parser
+
+
+def pet_mind_is_configured() -> bool:
+    return pet_mind_chain is not None
 
 
 def format_cards(cards):
@@ -188,7 +222,7 @@ KEYWORD_HINTS = {
 
 
 def extract_dialogue_keywords(message, locale="zh"):
-    """Extract a few useful terms locally when Minds is unavailable."""
+    """Extract a few useful terms locally when online inference is unavailable."""
     text = message.strip()
     lowered = text.lower()
     found = []
@@ -217,23 +251,28 @@ def extract_dialogue_keywords(message, locale="zh"):
 
 
 def run_pet_mind(message, locale="zh"):
-    """One question, one Mind completion, one card, with no conversation history."""
+    """One question, one LangChain completion, one card, with no conversation history."""
     clean_message = message.strip()
     card = draw_cards(1)[0]
-    provider = "local"
     result = None
 
-    if minds_is_configured():
+    if pet_mind_chain is not None:
         try:
-            result = run_mind_single_turn(clean_message, card, locale)
-            provider = "minds"
-        except MindsAgentError:
+            language = {"en": "English", "ja": "日本語", "zh": "简体中文"}.get(locale, "简体中文")
+            parsed = pet_mind_chain.invoke({
+                "message": clean_message,
+                "language": language,
+                "cards": format_cards([card]),
+            })
+            result = parsed.model_dump()
+            provider = "langchain"
+        except Exception:
             result = None
 
     if result is None:
-        provider = "deepseek" if pet_chain is not None else "local"
+        provider = "local"
         result = {
-            "reply": run_pet_chat(clean_message, history=[], locale=locale),
+            "reply": build_pet_fallback(clean_message, locale),
             "keywords": extract_dialogue_keywords(clean_message, locale),
             "reading": build_pet_draw_fallback(clean_message, card, locale),
         }

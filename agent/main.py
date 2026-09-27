@@ -3,7 +3,7 @@ import re
 from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from agent import run_pet_chat, run_pet_draw, run_pet_mind, run_tarot_reading
+from agent import pet_mind_is_configured, run_pet_chat, run_pet_draw, run_pet_mind, run_tarot_reading
 from database import (
     authenticate,
     create_reading,
@@ -16,7 +16,6 @@ from database import (
     list_readings,
     user_for_token,
 )
-from minds_client import minds_is_configured
 from schemas import (
     AuthResponse,
     LoginRequest,
@@ -93,7 +92,7 @@ def pet_chat(payload: PetChatRequest):
 
 @app.post("/api/pet/mind", response_model=PetMindResponse)
 def pet_mind(payload: PetMindRequest):
-    """Run one independent turn against one configured Mind and reveal one card."""
+    """Run one independent LangChain turn and reveal one card."""
     message = payload.message.strip()
     if not message:
         raise HTTPException(status_code=422, detail="请先写下你想问的问题")
@@ -104,8 +103,8 @@ def pet_mind(payload: PetMindRequest):
 @app.get("/api/pet/mind/status")
 def pet_mind_status():
     return {
-        "configured": minds_is_configured(),
-        "provider": "minds" if minds_is_configured() else "local",
+        "configured": pet_mind_is_configured(),
+        "provider": "langchain" if pet_mind_is_configured() else "local",
         "mode": "single-turn",
     }
 

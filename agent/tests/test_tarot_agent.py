@@ -12,18 +12,12 @@ sys.path.insert(0, str(BACKEND_DIR))
 TEST_DATABASE = Path(tempfile.gettempdir()) / f"arcana-unittest-{os.getpid()}.db"
 TEST_DATABASE.unlink(missing_ok=True)
 os.environ["ARCANA_DB_PATH"] = str(TEST_DATABASE)
-os.environ["DEEPSEEK_API_KEY"] = ""
-os.environ["DEEPSEEK_MODEL"] = "deepseek-v4-flash"
-os.environ["MINDS_API_KEY"] = ""
-os.environ["MINDS_BUILDER_API_KEY"] = ""
-os.environ["MINDS_SPARK_ID"] = ""
+os.environ["OPENAI_API_KEY"] = ""
+os.environ["OPENAI_MODEL"] = "gpt-5.6-luna"
 
 import agent  # noqa: E402
-from config import _env_value  # noqa: E402
 import main  # noqa: E402
-import minds_client  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
-from langchain_core.exceptions import OutputParserException  # noqa: E402
 from langchain_core.runnables import Runnable  # noqa: E402
 
 
@@ -36,24 +30,6 @@ class TarotApiTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.client.close()
         TEST_DATABASE.unlink(missing_ok=True)
-
-    def test_current_and_legacy_minds_key_names_are_supported(self):
-        with patch.dict(os.environ, {
-            "MINDS_BUILDER_API_KEY": "builder-token",
-            "MINDS_API_KEY": "legacy-token",
-        }):
-            self.assertEqual(
-                _env_value("MINDS_BUILDER_API_KEY", "MINDS_API_KEY"),
-                "builder-token",
-            )
-        with patch.dict(os.environ, {
-            "MINDS_BUILDER_API_KEY": "",
-            "MINDS_API_KEY": "legacy-token",
-        }):
-            self.assertEqual(
-                _env_value("MINDS_BUILDER_API_KEY", "MINDS_API_KEY"),
-                "legacy-token",
-            )
 
     def test_tarot_api_uses_cards_from_frontend(self):
         cards = [{
@@ -83,7 +59,7 @@ class TarotApiTests(unittest.TestCase):
             result = agent.run_tarot_reading("如何面对当前压力？", cards)
         self.assertIn("如何面对当前压力", result["result"])
         self.assertIn("力量", result["result"])
-        self.assertNotIn("DEEPSEEK_API_KEY", result["result"])
+        self.assertNotIn("OPENAI_API_KEY", result["result"])
         self.assertNotIn("未连接在线", result["result"])
 
     def test_fallback_reading_follows_requested_language(self):
@@ -107,7 +83,7 @@ class TarotApiTests(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 200, response.text)
         self.assertTrue(response.json()["reply"].strip())
-        self.assertNotIn("HelloMinds", response.json()["reply"])
+        self.assertNotIn("API", response.json()["reply"])
         english = self.client.post("/api/pet/chat", json={
             "message": "I need help clarifying my question.",
             "history": [],
@@ -157,120 +133,52 @@ class TarotApiTests(unittest.TestCase):
         self.assertTrue(payload["reply"].strip())
         self.assertIn(payload["card"]["name"], payload["reading"])
 
-    def test_pet_mind_calls_one_configured_mind_exactly_once(self):
-        mind_result = {
-            "reply": "我听见了你对这次选择的顾虑。",
-            "keywords": ["选择", "顾虑"],
-            "reading": "这张牌提醒你先确认能被事实验证的部分。",
-        }
-        with (
-            patch.object(agent, "minds_is_configured", return_value=True),
-            patch.object(agent, "run_mind_single_turn", return_value=mind_result) as mind_call,
-        ):
+    def test_pet_mind_calls_one_configured_langchain_agent_exactly_once(self):
+        class FakePetMindResult:
+            def model_dump(self):
+                return {
+                    "reply": "我听见了你对这次选择的顾虑。",
+                    "keywords": ["选择", "顾虑"],
+                    "reading": "这张牌提醒你先确认能被事实验证的部分。",
+                }
+
+        with patch.object(agent, "pet_mind_chain") as pet_mind_chain:
+            pet_mind_chain.invoke.return_value = FakePetMindResult()
             response = self.client.post("/api/pet/mind", json={
                 "message": "我该怎样面对这次选择？",
                 "locale": "zh",
             })
+
         self.assertEqual(response.status_code, 200, response.text)
-        self.assertEqual(response.json()["provider"], "minds")
+        self.assertEqual(response.json()["provider"], "langchain")
         self.assertEqual(response.json()["keywords"], ["选择", "顾虑"])
-        mind_call.assert_called_once()
-        args = mind_call.call_args.args
-        self.assertEqual(args[0], "我该怎样面对这次选择？")
-        self.assertEqual(args[2], "zh")
+        pet_mind_chain.invoke.assert_called_once()
+        call_input = pet_mind_chain.invoke.call_args.args[0]
+        self.assertEqual(call_input["message"], "我该怎样面对这次选择？")
+        self.assertIn("牌名", call_input["cards"])
 
-    def test_minds_client_sends_one_stateless_structured_message(self):
-        captured = []
+    def test_pet_mind_agent_is_a_langchain_pipeline(self):
+        self.assertIsInstance(agent.pet_mind_prompt, Runnable)
+        self.assertIsInstance(agent.pet_mind_parser, Runnable)
+        parsed = agent.pet_mind_parser.invoke(json.dumps({
+            "reply": "我听见了你对这次选择的顾虑。",
+            "keywords": ["选择", "顾虑"],
+            "reading": "这张牌提醒你先确认能被事实验证的部分。",
+        }))
+        self.assertEqual(parsed.keywords, ["选择", "顾虑"])
 
-        class FakeResponse:
-            def __init__(self, payload):
-                self.payload = payload
+    def test_pet_mind_falls_back_when_langchain_agent_fails(self):
+        with patch.object(agent, "pet_mind_chain") as pet_mind_chain:
+            pet_mind_chain.invoke.side_effect = ValueError("invalid structured output")
+            response = self.client.post("/api/pet/mind", json={
+                "message": "我该怎样面对这次选择？",
+                "locale": "zh",
+            })
 
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *_args):
-                return False
-
-            def read(self):
-                return json.dumps(self.payload).encode("utf-8")
-
-        def fake_urlopen(request, timeout):
-            captured.append((request, timeout))
-            if request.full_url.endswith("/v1/messaging/conversation"):
-                return FakeResponse({"conversationId": "conversation-test", "alias": "arcana-test"})
-            if request.full_url.endswith("/v1/messaging/message"):
-                return FakeResponse({"messageId": "message-test", "alias": "arcana-test"})
-            if "/v1/messaging/histories/arcana-test" in request.full_url:
-                return FakeResponse([{
-                    "senderType": 0,
-                    "messageText": json.dumps({
-                        "reply": "A quiet reply",
-                        "keywords": ["career", "choice"],
-                        "reading": "A concise reading",
-                    }),
-                }])
-            self.fail(f"Unexpected URL: {request.full_url}")
-
-        card = {"name": "The Star", "direction": "Upright", "meaning": "Hope"}
-        with (
-            patch.object(minds_client, "MINDS_API_KEY", "minds_test_key"),
-            patch.object(minds_client, "MINDS_SPARK_ID", "spark test"),
-            patch.object(minds_client, "MINDS_API_BASE", "https://api.build.hellominds.ai"),
-            patch.object(minds_client, "_conversation_alias", return_value="arcana-test"),
-            patch.object(minds_client.urllib.request, "urlopen", side_effect=fake_urlopen),
-        ):
-            result = minds_client.run_mind_single_turn("What should I choose?", card, "en")
-
-        create_request = captured[0][0]
-        create_body = json.loads(create_request.data.decode("utf-8"))
-        self.assertTrue(create_request.full_url.endswith("/v1/messaging/conversation"))
-        self.assertEqual(create_request.get_header("X-api-key"), "minds_test_key")
-        self.assertEqual(create_body["mindId"], "spark test")
-        self.assertEqual(create_body["alias"], "arcana-test")
-
-        message_request = captured[1][0]
-        message_body = json.loads(message_request.data.decode("utf-8"))
-        self.assertTrue(message_request.full_url.endswith("/v1/messaging/message"))
-        self.assertEqual(message_body["alias"], "arcana-test")
-        self.assertIn("Return ONLY valid JSON", message_body["messageText"])
-        self.assertIn("What should I choose?", message_body["messageText"])
-        self.assertEqual(result["keywords"], ["career", "choice"])
-
-    def test_minds_agent_is_a_langchain_pipeline(self):
-        self.assertIsInstance(minds_client.mind_chain, Runnable)
-        graph = minds_client.mind_chain.get_graph()
-        node_names = {node.name for node in graph.nodes.values()}
-        self.assertIn("MindsBuilderTransport", node_names)
-        self.assertIn("MindsStructuredOutputExtractor", node_names)
-        self.assertTrue(any("PydanticOutputParser" in name for name in node_names))
-
-    def test_minds_client_extracts_html_wrapped_json(self):
-        response = (
-            "<p>Generated by TARO.</p>"
-            "<pre>{&quot;reply&quot;:&quot;A quiet reply&quot;,"
-            "&quot;keywords&quot;:[&quot;career&quot;,&quot;choice&quot;],"
-            "&quot;reading&quot;:&quot;A concise reading&quot;}</pre>"
-            "<p>Extra rich-text footer.</p>"
-        )
-        structured = minds_client._extract_structured_output(response)
-        parsed = minds_client.mind_output_parser.invoke(structured)
-        self.assertEqual(parsed.keywords, ["career", "choice"])
-        self.assertEqual(parsed.reply, "A quiet reply")
-
-    def test_minds_agent_wraps_structured_output_errors(self):
-        with (
-            patch.object(minds_client, "MINDS_API_KEY", "test-key"),
-            patch.object(minds_client, "MINDS_SPARK_ID", "test-mind"),
-            patch.object(minds_client, "mind_chain") as mocked_chain,
-            self.assertRaises(minds_client.MindsAgentError),
-        ):
-            mocked_chain.invoke.side_effect = OutputParserException("invalid Mind JSON")
-            minds_client.run_mind_single_turn(
-                "What should I choose?",
-                {"name": "The Star", "direction": "Upright", "meaning": "Hope"},
-                "en",
-            )
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["provider"], "local")
+        self.assertTrue(response.json()["reply"].strip())
+        self.assertTrue(response.json()["keywords"])
 
     def test_register_login_and_private_reading_history(self):
         registration = self.client.post("/api/auth/register", json={

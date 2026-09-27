@@ -1,4 +1,4 @@
-# ARCANA 黑客松 B｜桌宠整合版
+# ARCANA 独立版｜LangChain 桌宠整合版
 
 这是一个 Vite + FastAPI 的 AI 塔罗网站。本版本在 Chrome 稳定版基础上整合了网页塔罗猫与独立 Windows 桌宠、站内对话、账号和个人占卜档案。
 
@@ -11,7 +11,7 @@
 - 更克制的黑色书册视觉，取消大面积金色渐变、胶囊按钮和产品宣传式表达。
 - 中、英、日三语界面切换，并在浏览器中记住语言偏好。
 - 所有页面都带有塔罗猫桌宠：单击会回应，闲置会休息，双击只打开站内对话框，不会跳转到外部智能体页面。
-- 桌宠问答通过 FastAPI 的 `/api/pet/mind` 接口工作；每个问题只向一个 Minds Mind 发出一次无历史请求，同时返回回应、关键词和单牌简析。
+- 桌宠问答通过 FastAPI 的 `/api/pet/mind` 接口工作；每个问题由 LangChain Agent 独立处理，同时返回回应、关键词和单牌简析。
 - 22 张大阿卡那牌义图鉴，可搜索并查看正位、逆位三语释义；图鉴与抽牌结果共用同一套本地牌面图片。
 - 首页卡面、中心眼睛和星轨会随鼠标产生带缓动的 3D 空间视差。
 - 抽牌区使用扇形/百叶式展开，中央发光虚框是固定选牌位；鼠标、触屏、键盘和摄像头手势都会让牌组从虚框中滑过。
@@ -41,7 +41,7 @@
 - 桌宠采用组员提供的 67 帧精细 GIF：休息时保持精细形象，进入好奇、对话或等待回复状态时播放动画；网页内桌宠同步使用该动画。
 - 单击桌宠会展开一个小型、低干扰对话框。问她问题后，桌宠会提取关键词，小猫本体沿 Y 轴翻转成一张真实塔罗牌，并显示简短解读；约 8 秒后翻回小猫。
 - 桌面对话框内可切换 `中 / EN / 日`，界面文案、请求语言、本地备用回复和在线回复都会跟随当前语言，并在下次启动时保留选择。
-- 问答调用 `/api/pet/mind`，手动“抽一张”仍调用 `/api/pet/draw`；后端或 Minds 临时不可用时会自动使用三语本地回复和本地抽牌。
+- 问答调用 `/api/pet/mind`，手动“抽一张”仍调用 `/api/pet/draw`；后端或在线模型临时不可用时会自动使用三语本地回复和本地抽牌。
 - 独立桌宠代码位于 `desktop_pet/arcana_desktop_pet.py`，位置设置保存在 `%LOCALAPPDATA%\ArcanaMuse\desktop-pet.json`。
 
 ## 网页内桌宠
@@ -53,7 +53,7 @@
 - 中、英、日语言切换会同步更新桌宠名称、提示、快捷问题和输入区域。
 - 四种状态素材位于 `frontend/public/assets/pet`，组件代码位于 `frontend/pet.js` 与 `frontend/pet.css`。
 
-桌宠不会打开外部智能体页面。Minds 调用只发生在本机 FastAPI 后端，API Key 不会发送到网页或桌宠窗口。
+桌宠不会打开外部智能体页面。LangChain 调用只发生在本机 FastAPI 后端，API Key 不会发送到网页或桌宠窗口。
 
 独立 Windows 桌宠模仿的是轻量桌面助手的交互方式，不会接管或冒充 Codex；它只调用当前 ARCANA 的塔罗接口。
 
@@ -65,30 +65,25 @@
 - 摄像头画面只在当前浏览器中交给本地 MediaPipe 模型识别，不会由本项目上传；停止手势或离开页面会关闭视频轨道。
 - 手势模型运行文件已经包含在 `frontend/public/vendor/mediapipe`，牌面位于 `frontend/public/assets/cards`。
 
-## 可选：接入 Minds Mind
+## 可选：配置在线模型
 
-最简单的方法是双击项目根目录的 `configure-mind.bat`，按提示粘贴 API Key 和 Mind Spark ID，然后关闭旧的启动窗口并重新双击 `start.bat`。
+项目默认使用 LangChain 编排塔罗解读、桌宠聊天和桌宠单牌问答。填写 OpenAI API Key 后，后端会通过 `langchain-openai` 调用官方 OpenAI 模型；不填写时仍可正常抽牌、使用桌宠、注册、登录和保存记录，只是会使用内置三语备用回复。
 
 编辑 `agent/.env`：
 
 ```dotenv
-MINDS_BUILDER_API_KEY=你的_Builder_API_Key
-MINDS_SPARK_ID=0582483e-f36b-1410-8466-00039ce7df11
-MINDS_API_BASE=https://api.build.hellominds.ai
-DEEPSEEK_API_KEY=你的_API_Key
-DEEPSEEK_MODEL=deepseek-v4-flash
+OPENAI_API_KEY=你的_OpenAI_API_Key
+OPENAI_MODEL=gpt-5.6-luna
 ARCANA_DB_PATH=arcana.db
 ```
 
-`MINDS_BUILDER_API_KEY` 是当前 Minds Builder 使用的变量名；项目也继续兼容旧变量名 `MINDS_API_KEY`，并接受旧式 `minds_...` 与当前 JWT 形式的有效 Key。`MINDS_SPARK_ID` 已固定为你在 Hellominds 创建的 TARO Mind。每次提问都会创建一个独立 conversation，不发送之前的聊天记录。主占卜使用 `DEEPSEEK_MODEL`，默认是当前可用的 `deepseek-v4-flash`；旧模型名 `deepseek-chat` 已停止服务。没有填写在线模型 Key 时仍可正常抽牌、使用桌宠、注册、登录和保存记录；桌宠会自动使用内置三语回复。修改 `.env` 后需要重启后端。请勿分享包含真实 Key 的 `.env`。
-
-TARO Mind 的本地编排使用 LangChain LCEL：`PromptTemplate → MindsBuilderTransport → PydanticOutputParser`。Minds Builder REST API 仍是底层模型服务，因此保留参赛所需的 Mind，同时由 LangChain 负责提示词渲染、调用链追踪和结构化输出校验。
+桌宠单牌问答使用 LangChain LCEL：`ChatPromptTemplate → ChatOpenAI → PydanticOutputParser`。主占卜、桌宠聊天和桌宠单牌问答共用 `OPENAI_MODEL`，默认是 OpenAI 当前成本敏感场景推荐的 `gpt-5.6-luna`。没有填写 `OPENAI_API_KEY` 时，后端会自动回退到本地规则。修改 `.env` 后需要重启后端。请勿分享包含真实 Key 的 `.env`。
 
 ## 数据位置
 
 本地用户与占卜记录默认保存在 `agent/arcana.db`。这个文件不包含在发布压缩包中，第一次启动后自动创建。
 
-当前实现适合黑客松演示或个人本机使用。如果部署到无持久磁盘的云平台，应把 SQLite 替换为 PostgreSQL、Supabase 等持久数据库，并将允许跨域的来源改为实际域名。
+当前实现适合个人本机使用或小规模独立发布。如果部署到无持久磁盘的云平台，应把 SQLite 替换为 PostgreSQL、Supabase 等持久数据库，并将允许跨域的来源改为实际域名。
 
 ## 手动启动
 
